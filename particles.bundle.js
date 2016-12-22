@@ -49,24 +49,25 @@
 	var Particle = (function () {
 	    function Particle(screen, color, size) {
 	        if (color === void 0) { color = null; }
-	        if (size === void 0) { size = 10; }
+	        if (size === void 0) { size = 4; }
+	        this.isCached = false;
 	        var directions = ['top', 'top-right', 'right', 'bottom-right', 'bottom', 'bottom-left', 'left', 'top-left'];
 	        this.ctx = screen.getContext('2d');
-	        this.radius = Math.random() * size;
-	        this.x = Math.random() * screen.width;
-	        this.y = Math.random() * screen.height;
+	        this.radius = Math.floor(Math.random() * size);
+	        this.x = Math.floor(Math.random() * screen.width);
+	        this.y = Math.floor(Math.random() * screen.height);
 	        this.color = color ? color : this.getRandomColor();
-	        this.opacity = Math.random();
+	        this.opacity = .4;
 	        this.direction = directions[Math.floor(Math.random() * (directions.length - 1))];
 	        this.initVelocity();
+	        this.initCacheCtx();
 	    }
 	    Particle.prototype.render = function (particles) {
 	        this.move(particles);
-	        this.ctx.fillStyle = this.colorString;
-	        this.ctx.beginPath();
-	        this.ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
-	        this.ctx.closePath();
-	        this.ctx.fill();
+	        if (!this.isCached) {
+	            this.cache();
+	        }
+	        this.ctx.drawImage(this.cacheCtx.canvas, this.x - this.radius, this.y - this.radius);
 	    };
 	    Object.defineProperty(Particle.prototype, "colorString", {
 	        get: function () {
@@ -75,6 +76,20 @@
 	        enumerable: true,
 	        configurable: true
 	    });
+	    Particle.prototype.cache = function () {
+	        this.cacheCtx.fillStyle = this.colorString;
+	        this.cacheCtx.beginPath();
+	        this.cacheCtx.arc(this.radius, this.radius, this.radius, 0, Math.PI * 2, false);
+	        this.cacheCtx.closePath();
+	        this.cacheCtx.fill();
+	        this.isCached = true;
+	    };
+	    Particle.prototype.initCacheCtx = function () {
+	        var cacheCanvas = document.createElement('canvas');
+	        cacheCanvas.width = this.radius * 2;
+	        cacheCanvas.height = this.radius * 2;
+	        this.cacheCtx = cacheCanvas.getContext('2d');
+	    };
 	    Particle.prototype.initVelocity = function () {
 	        var velbase;
 	        switch (this.direction) {
@@ -110,7 +125,7 @@
 	        this.vy = velbase.y * Math.random();
 	    };
 	    Particle.prototype.linkTo = function (p) {
-	        var dx = this.x - p.x, dy = this.y - p.y, opacity = 0.4, distance = 250, dist = Math.sqrt(dx * dx + dy * dy);
+	        var dx = this.x - p.x, dy = this.y - p.y, opacity = 0.4, distance = 90, dist = Math.sqrt(dx * dx + dy * dy);
 	        if (dist <= distance) {
 	            var lineOpacity = opacity - (dist / (1 / opacity)) / distance;
 	            if (lineOpacity > 0) {
@@ -131,8 +146,8 @@
 	        }
 	        this.vx = (this.x + this.radius > this.ctx.canvas.width || this.x < 0) ? -this.vx : this.vx;
 	        this.vy = (this.y + this.radius > this.ctx.canvas.height || this.y < 0) ? -this.vy : this.vy;
-	        this.x += this.vx * 3;
-	        this.y += this.vy * 3;
+	        this.x += this.vx * 7;
+	        this.y += this.vy * 7;
 	    };
 	    Particle.prototype.getRandomColor = function () {
 	        return {
@@ -180,7 +195,7 @@
 	    };
 	    return ParticlesApp;
 	}());
-	var particlesApp = new ParticlesApp(window.innerWidth, window.innerHeight, 208);
+	var particlesApp = new ParticlesApp(window.innerWidth, window.innerHeight, 300);
 	particlesApp.run();
 
 
