@@ -19,29 +19,48 @@ class Particle {
     private opacity: number;
     private ctx: CanvasRenderingContext2D;
     private direction: string;
-    public constructor(screen: HTMLCanvasElement, color: IColor = null, size = 10) {
+    private cacheCtx: CanvasRenderingContext2D;
+    private isCached = false;
+    public constructor(screen: HTMLCanvasElement, color: IColor = null, size = 4) {
         let directions = ['top', 'top-right', 'right', 'bottom-right', 'bottom', 'bottom-left', 'left', 'top-left'];
         this.ctx = screen.getContext('2d');
-        this.radius = Math.random() * size;
-        this.x = Math.random() * screen.width;
-        this.y = Math.random() * screen.height;
+        this.radius = Math.floor(Math.random() * size);
+        this.x = Math.floor(Math.random() * screen.width);
+        this.y = Math.floor(Math.random() * screen.height);
         this.color = color ? color : this.getRandomColor();
-        this.opacity = Math.random();
+        this.opacity = .4;
         this.direction = directions[Math.floor(Math.random() * (directions.length - 1))];
         this.initVelocity();
+        this.initCacheCtx();
     }
 
     public render(particles: Particle[]) {
         this.move(particles);
-        this.ctx.fillStyle = this.colorString;
-        this.ctx.beginPath();
-        this.ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
-        this.ctx.closePath();
-        this.ctx.fill();
+        if (!this.isCached) {
+            this.cache();
+        }
+
+        this.ctx.drawImage(this.cacheCtx.canvas, this.x - this.radius, this.y - this.radius);
     }
 
     get colorString() {
         return `rgba(${this.color.r}, ${this.color.g}, ${this.color.b}, ${this.opacity})`;
+    }
+
+    private cache() {
+        this.cacheCtx.fillStyle = this.colorString;
+        this.cacheCtx.beginPath();
+        this.cacheCtx.arc(this.radius, this.radius, this.radius, 0, Math.PI * 2, false);
+        this.cacheCtx.closePath();
+        this.cacheCtx.fill();
+        this.isCached = true;
+    }
+
+    private initCacheCtx() {
+        let cacheCanvas = document.createElement('canvas');
+        cacheCanvas.width = this.radius * 2;
+        cacheCanvas.height = this.radius * 2;
+        this.cacheCtx = cacheCanvas.getContext('2d');
     }
 
     private initVelocity() {
@@ -84,7 +103,7 @@ class Particle {
         let dx = this.x - p.x,
             dy = this.y - p.y,
             opacity = 0.4,
-            distance = 250,
+            distance = 90,
             dist = Math.sqrt(dx * dx + dy * dy);
 
         if (dist <= distance) {
@@ -107,8 +126,8 @@ class Particle {
         }
         this.vx = (this.x + this.radius > this.ctx.canvas.width || this.x < 0) ? -this.vx : this.vx;
         this.vy = (this.y + this.radius > this.ctx.canvas.height || this.y < 0) ? -this.vy : this.vy;
-        this.x += this.vx * 3;
-        this.y += this.vy * 3;
+        this.x += this.vx * 7;
+        this.y += this.vy * 7;
     }
 
     private getRandomColor(): IColor {
@@ -164,5 +183,5 @@ class ParticlesApp {
     }
 }
 
-const particlesApp = new ParticlesApp(window.innerWidth, window.innerHeight, 208);
+const particlesApp = new ParticlesApp(window.innerWidth, window.innerHeight, 300);
 particlesApp.run();
