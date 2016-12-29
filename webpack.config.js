@@ -3,7 +3,8 @@ const path = require('path');
 module.exports = {
     entry: {
         index: './index.ts',
-        particles: './particles.ts'
+        particles: './particles.ts',
+        vmdemo: './vmdemo.ts'
     },
     output: {
         path: path.join(__dirname, 'dist'),
@@ -11,7 +12,7 @@ module.exports = {
         publicPath: ''
     },
     resolve: {
-        extensions: ['', 'ts', 'js']
+        extensions: ['', '.ts', '.js']
     },
     module: {
         loaders: [{
