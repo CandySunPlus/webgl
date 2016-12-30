@@ -1,12 +1,9 @@
 class VM {
-    private __isReady = false;
     constructor(private __object: any, private __bind: any) {
         if (!Function.bind || !Object.defineProperty) {
             throw new Error('Required APIs not available.');
         }
         this.__object = this.bind(__object);
-        this.__isReady = true;
-
     }
 
     get proxyModel(): any{
@@ -22,40 +19,34 @@ class VM {
                 configurable: true,
                 enumerable: true,
                 set: v => {
-                    if (this.__isReady) {
-                        if (Object.prototype.toString.apply(v) === '[object Object]') {
-                            value = this.bind(v, _path);
-                        } else {
-                            value = v;
-                        }
-                        if (this.__bind.binder.hasOwnProperty(_pathName)) {
-                            let els = this.__bind.container.querySelectorAll(this.__bind.binder[_pathName]);
-                            for (let el of els) {
-                                if (el.nodeName === 'INPUT' || el.nodeName === 'TEXTAREA') {
-                                    el.value = value;
-                                } else {
-                                    el.innerHTML = value;
-                                }
+                    value = v;
+                    if (this.__bind.binder.hasOwnProperty(_pathName)) {
+                        let els = this.__bind.container.querySelectorAll(this.__bind.binder[_pathName]);
+                        for (let el of els) {
+                            if (el.nodeName === 'INPUT' || el.nodeName === 'TEXTAREA') {
+                                el.value = value;
+                            } else {
+                                el.innerHTML = value;
                             }
                         }
-                        console.log(`set key ${_pathName} value ${JSON.stringify(value)}`);
                     }
+                    console.log(`set key ${_pathName} value ${JSON.stringify(value)}`);
                 },
                 get: () => value
             });
 
-            if (!this.__isReady) {
-                if (Object.prototype.toString.apply(value) === '[object Object]') {
-                    object[key] = this.bind(value, _path);
-                }
-                if (this.__bind.binder.hasOwnProperty(_pathName)) {
-                    let els = this.__bind.container.querySelectorAll(this.__bind.binder[_pathName]);
-                    for (let el of els) {
-                        if (el.nodeName === 'INPUT' || el.nodeName === 'TEXTAREA') {
-                            el.addEventListener('input', () => {
-                                object[key] = el.value;
-                            });
-                        }
+            if (Object.prototype.toString.apply(value) === '[object Object]') {
+                object[key] = this.bind(value, _path);
+            } else {
+                object[key] = value;
+            }
+            if (this.__bind.binder.hasOwnProperty(_pathName)) {
+                let els = this.__bind.container.querySelectorAll(this.__bind.binder[_pathName]);
+                for (let el of els) {
+                    if (el.nodeName === 'INPUT' || el.nodeName === 'TEXTAREA') {
+                        el.addEventListener('input', () => {
+                            object[key] = el.value;
+                        });
                     }
                 }
             }
